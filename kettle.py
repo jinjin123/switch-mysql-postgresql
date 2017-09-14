@@ -186,7 +186,7 @@ def logwrite(sendstatus, content):
         content = senderr
     t = datetime.datetime.now()
     daytime = t.strftime('%Y-%m-%d')
-    daylogfile = logpath+'/'+str(daytime)+'.log'
+    daylogfile = logpath+'/'+str(daytime)+'stc'+'.log'
     logger = Log(daylogfile, level="info", is_console=False, mbs=5, count=5)
     logger.info(content)
 
@@ -230,15 +230,18 @@ def change_job(TIME):
          sendstatus = False
     logwrite(sendstatus,sendcontent)
 
-def main():
+def main(start_day,end_day,interval):
     sendcontent = ''
     sendstatus = False
+    start_day=start_day
+    end_day=end_day
+    interval=interval
+    # start_day='2017-09-01 00:00:00';
+    # interval = 15
+    # end_day='2017-09-02 23:59:59';
     mysql = MYSQL(host='192.168.0.117',port=3306,user='root',pwd='jinjin123',db='testing')
-    start_day='2017-09-01 00:00:00';
     # start_day = ((datetime.datetime.now()-datetime.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M"))
     # end_day = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    interval = 15
-    end_day='2017-09-02 23:59:59';
     storeid="'CN757023','CN010001','CN010002','CN010003','CN010004'";
     sql="""
 insert into  s_tc_middle_table (dates,storeid,start_time,end_time,consume_type,sale_s,net_s,tc,unixtimetag)
@@ -398,8 +401,8 @@ select
                 ) as times on s.time_group=times.timeframe
                   GROUP BY date , storeId , plat,start_time )a;
 """% {"start_day": start_day ,"end_day": end_day, 'storeid': storeid,'interval': interval}
-    # print sql
     try:
+        # print sql
         mysql.ExecNonQuery(sql)
         ID = get_last_id()
         sendcontent = "the last record is %d" ID
@@ -412,4 +415,13 @@ select
 
 
 if __name__ == "__main__":
-	main()
+    if len(sys.argv) > 1:
+        start_day = sys.argv[1]
+        end_day = sys.argv[2]
+        interval = sys.argv[3]
+        main(start_day,end_day,interval)
+    else:
+        start_day = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
+        interval = 15
+        end_day = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
+        main(start_day,end_day,interval)
